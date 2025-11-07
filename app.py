@@ -39,11 +39,25 @@ if __name__ == "__main__":
 
 @app.route('/callback')
 def callback():
-    @app.route('/current_track')
+    sp_oauth = SpotifyOAuth(
+        client_id="ae5f92b9784c43cfb9c7425a16123855",
+        client_secret="TEU_CLIENT_SECRET_AQUI",
+        redirect_uri="https://monkeydubspotify.onrender.com/callback",
+        scope="user-read-private user-read-email playlist-read-private playlist-modify-private user-library-read user-read-currently-playing user-read-playback-state user-modify-playback-state"
+    )
+    code = request.args.get('code')
+    if code:
+        token_info = sp_oauth.get_access_token(code)
+        return "✅ Token recebido com sucesso!"
+    else:
+        return "❌ Nenhum código recebido."
+
+
+@app.route('/current_track')
 def current_track():
     sp_oauth = SpotifyOAuth(
         client_id="ae5f92b9784c43cfb9c7425a16123855",
-        client_secret="350e1abc22af4c53acf9788f76a6dc17",
+        client_secret="TEU_CLIENT_SECRET_AQUI",
         redirect_uri="https://monkeydubspotify.onrender.com/callback",
         scope="user-read-currently-playing"
     )
@@ -58,6 +72,7 @@ def current_track():
         return f"🎧 Agora tocando: {nome} – {artista}"
     else:
         return "🎵 Nenhuma faixa tocando agora."
+
 
     sp_oauth = SpotifyOAuth(
         client_id="ae5f92b9784c43cfb9c7425a16123855",

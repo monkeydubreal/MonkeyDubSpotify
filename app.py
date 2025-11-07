@@ -83,9 +83,35 @@ def current_track():
     if track and track['item']:
         nome = track['item']['name']
         artista = track['item']['artists'][0]['name']
-        return f"🎵 Agora tocando: {nome} — {artista}"
+        return f"🎧 Agora tocando: {nome} — {artista}"
     else:
         return "❌ Nenhuma faixa tocando agora."
+
+
+@app.route('/vibe_track')
+def vibe_track():
+    sp = get_spotify_client()
+
+    track = sp.current_user_playing_track()
+    if not track or not track['item']:
+        return "❌ Nenhuma faixa tocando agora."
+
+    nome = track['item']['name']
+    artista = track['item']['artists'][0]['name']
+    track_id = track['item']['id']
+
+    features = sp.audio_features([track_id])[0]
+    bpm = features['tempo']
+    energy = features['energy']
+
+    if energy < 0.4:
+        vibe = f"🌅 Faixa suave — {int(bpm)} BPM. Ideal pra warm-up, organic ou deep flow."
+    elif energy < 0.7:
+        vibe = f"💫 Groove médio — {int(bpm)} BPM. Perfeito pra manter o público embalado."
+    else:
+        vibe = f"🔥 Alta energia — {int(bpm)} BPM. Hora do drop, segura a pista!"
+
+    return f"🎧 Agora tocando: {nome} — {artista}\n{vibe}"
 
 
 

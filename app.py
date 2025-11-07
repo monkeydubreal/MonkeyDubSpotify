@@ -79,33 +79,46 @@ def vibe_track():
 
     track = sp.current_user_playing_track()
     if not track or not track['item']:
-        return "❌ Nenhuma faixa tocando agora!"
+        return "<h3>❌ Nenhuma faixa tocando agora!</h3>"
 
     nome = track['item']['name']
     artista = track['item']['artists'][0]['name']
+    artista_id = track['item']['artists'][0]['id']
+    artista_link = track['item']['artists'][0]['external_urls']['spotify']
     track_id = track['item']['id']
+    link_spotify = track['item']['external_urls']['spotify']
 
+    # Dados de áudio
     features = sp.audio_features([track_id])[0]
     bpm = int(features['tempo'])
     energy = features['energy']
     key_index = features['key']
     mode = features['mode']
 
-    # 🎵 Tonalidade (key + modo)
+    # Gênero do artista
+    artista_info = sp.artist(artista_id)
+    generos = artista_info.get('genres', [])
+    genero = generos[0].title() if generos else "Indefinido"
+
+    # Notas musicais
     notas = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"]
     tonalidade = notas[key_index] + ("m" if mode == 0 else "")
 
-    # 🌅 Define o "clima" da faixa
+    # Vibe da faixa
     if bpm < 115 and energy < 0.5:
-        vibe = "☀️ Sunset — vibe leve e orgânica, mixa com tons suaves."
+        modo = "sunset"
+        vibe_txt = "🌅 Vibe leve e orgânica, deixa o sol cair devagar."
     elif 115 <= bpm <= 123 and 0.5 <= energy <= 0.75:
-        vibe = "💃 Groove — pista firme, fluindo suave."
+        modo = "groove"
+        vibe_txt = "💫 Groove firme, pista sorrindo, segura o flow."
     elif bpm > 123 and energy > 0.75:
-        vibe = "🔥 Peak time — energia alta, hora do drop pesado!"
+        modo = "peak"
+        vibe_txt = "🔥 Drop intenso, segura o grave e deixa o corpo falar."
     else:
-        vibe = "🌙 After — introspectivo, vibe noturna e densa."
+        modo = "after"
+        vibe_txt = "🌙 Clima introspectivo, deixa o som respirar."
 
-    # 🎯 Sugestões compatíveis
+    # Recomendações harmônicas (3)
     recs = sp.recommendations(
         seed_tracks=[track_id],
         limit=3,
@@ -114,24 +127,82 @@ def vibe_track():
         target_key=key_index
     )
 
-    if recs['tracks']:
-        sugestoes = []
-        for i, rec in enumerate(recs['tracks'][:3]):
-            nome_rec = rec['name']
-            artista_rec = rec['artists'][0]['name']
-            link = rec['external_urls']['spotify']
-            sugestoes.append(f"{i+1}. [{nome_rec} — {artista_rec}]({link})")
-        sugestoes_txt = "\n".join(sugestoes)
-    else:
-        sugestoes_txt = "⚡ Nenhuma sugestão perfeita no momento."
+    sugestoes_html = ""
+    for i, r in enumerate(recs['tracks'][:3]):
+        link_r = r['external_urls']['spotify']
+        sugestoes_html += f"<li>{i+1}️⃣ <a href='{link_r}' target='_blank'>{r['name']} — {r['artists'][0]['name']}</a></li>"
 
-    return f"""
-    🎧 Tocando agora: <b>{nome}</b> — {artista}<br>
-    💫 <b>{bpm} BPM</b> | Tom <b>{tonalidade}</b><br><br>
-    {vibe}<br><br>
-    🎯 <b>Sugestões Monkey Dub:</b><br>
-    {sugestoes_txt}
+    # Links externos
+    beatport_url = f"https://www.beatport.com/search?q={nome.replace(' ', '+')}+{artista.replace(' ', '+')}"
+    traxsource_url = f"https://www.traxsource.com/search?term={nome.replace(' ', '+')}+{artista.replace(' ', '+')}"
+
+    # HTML estilizado
+    html = f"""
+    <html>
+    <head>
+        <title>Monkey Dub | Vibe Track</title>
+        <style>
+            body {{
+                background-color: #0d0d0d;
+                color: #f5f5f5;
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 30px;
+            }}
+            h1, h2 {{
+                color: #00ff99;
+            }}
+            a {{
+                color: #1DB954;
+                text-decoration: none;
+            }}
+            a:hover {{
+                text-decoration: underline;
+            }}
+            .info {{
+                margin: 20px 0;
+                font-size: 1.2em;
+            }}
+            ul {{
+                list-style: none;
+                padding: 0;
+            }}
+            li {{
+                margin: 8px 0;
+            }}
+            .links a {{
+                display: inline-block;
+                margin: 8px;
+                padding: 10px 20px;
+                background: #1DB954;
+                border-radius: 25px;
+                color: white;
+                font-weight: bold;
+            }}
+        </style>
+    </head>
+    <body>
+        <h1>🎧 {nome}</h1>
+        <h2>by {artista}</h2>
+        <div class='info'>
+            <p>💫 {bpm} BPM | Tom {tonalidade} | Gênero: {genero}</p>
+            <p>{vibe_txt}</p>
+        </div>
+
+        <h3>🌀 Próximas na mesma onda:</h3>
+        <ul>{sugestoes_html}</ul>
+
+        <div class='links'>
+            <a href='{link_spotify}' target='_blank'>🎧 Spotify</a>
+            <a href='{artista_link}' target='_blank'>👤 Artista</a>
+            <a href='{beatport_url}' target='_blank'>💿 Beatport</a>
+            <a href='{traxsource_url}' target='_blank'>🎚️ Traxsource</a>
+        </div>
+    </body>
+    </html>
     """
+
+    return html
 
 
 

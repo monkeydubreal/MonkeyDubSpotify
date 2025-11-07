@@ -117,4 +117,11 @@ def vibe_track():
                 body {{
                     background-color: #0d0d0d;
                     color: #f5f5
+                    
+                        return html
+
+
+# 🔹 Fim do arquivo (fora de qualquer função)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
 

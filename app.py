@@ -100,25 +100,65 @@ def vibe_track():
     artista = track['item']['artists'][0]['name']
     track_id = track['item']['id']
 
-    # pega os dados de áudio da faixa
+    # pega os dados de áudio da faixa atual
     features = sp.audio_features([track_id])[0]
     bpm = int(features['tempo'])
     energy = features['energy']
+    key_index = features['key']
+    mode = features['mode']
 
-    # interpreta energia e gera fala de DJ 🔊
-    if energy < 0.4:
-        vibe = f"🌅 Groove leve, {bpm} BPM — clima de warm-up, vai no toque orgânico e deixa respirar."
-    elif energy < 0.7:
-        vibe = f"💫 Groove no ponto, {bpm} BPM — pista tá fluindo, segura a vibe e deixa rolar mais um loop."
+    # mapeia tonalidades (0–11 → notas)
+    notas = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"]
+    tonalidade = notas[key_index] + ("m" if mode == 0 else "")
+
+    # define o modo de energia
+    if bpm < 115 and energy < 0.5:
+        modo = "sunset"
+    elif 115 <= bpm <= 123 and 0.5 <= energy <= 0.75:
+        modo = "groove"
+    elif bpm > 123 and energy > 0.75:
+        modo = "peak"
     else:
-        vibe = f"🔥 Tá pegando fogo! {bpm} BPM — drop forte, segura o grave e solta a alma no groove!"
+        modo = "after"
 
-    # resposta estilo Monkey Dub 😎
+    # busca faixas similares com base em BPM, energia e tonalidade
+    recommendations = sp.recommendations(
+        seed_tracks=[track_id],
+        limit=5,
+        target_tempo=bpm,
+        target_energy=energy,
+        target_key=key_index
+    )
+
+    # escolhe a melhor sugestão (mais próxima de BPM/energia)
+    if recommendations['tracks']:
+        next_track = recommendations['tracks'][0]
+        next_name = next_track['name']
+        next_artist = next_track['artists'][0]['name']
+        next_bpm = sp.audio_features([next_track['id']])[0]['tempo']
+        sugestao = f"🎯 Próxima faixa ideal: {next_name} — {next_artist} ({int(next_bpm)} BPM)"
+    else:
+        sugestao = "⚡ Não encontrei sugestão perfeita agora, mas o groove continua contigo!"
+
+    # mensagem por energia / modo
+    if modo == "sunset":
+        vibe = f"🌅 {bpm} BPM em {tonalidade} — vibe leve e orgânica. Mixa com tons vizinhos ({notas[(key_index+1)%12]} ou {notas[(key_index+11)%12]})."
+    elif modo == "groove":
+        vibe = f"💫 {bpm} BPM em {tonalidade} — groove firme, pista sorrindo. Mantém dentro da mesma key ou sobe meio tom se quiser abrir."
+    elif modo == "peak":
+        vibe = f"🔥 {bpm} BPM em {tonalidade} — energia alta! Ideal pra drop pesado, mantém tensão harmônica e segura o grave."
+    else:
+        vibe = f"🌙 {bpm} BPM em {tonalidade} — after feeling... introspectivo e profundo. Deixa o som respirar."
+
+    # resposta final estilo Monkey Dub 🎧
     return f"""
     🎧 Bro, olha o som:
     👉 {nome} — {artista}
+
     {vibe}
+    {sugestao}
     """
+
 
 
 

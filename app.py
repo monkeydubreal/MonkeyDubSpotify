@@ -131,16 +131,29 @@ def get_spotify_client():
         client_id="ae5f92b9784c43cfb9c7425a16123855",
         client_secret="350e1abc22af4c53acf9788f76a6dc17",
         redirect_uri="https://monkeydubspotify.onrender.com/callback",
-        scope="user-read-currently-playing",
+        scope="user-read-private user-read-email playlist-read-private playlist-modify-private user-library-read user-read-currently-playing user-read-playback-state user-modify-playback-state",
         cache_path=".spotifycache"
     )
 
+    token_info = None
+
     try:
+        # tenta renovar usando o refresh_token salvo
         with open(".refresh_token", "r") as f:
             refresh_token = f.read().strip()
             token_info = sp_oauth.refresh_access_token(refresh_token)
-    except Exception:
+    except FileNotFoundError:
+        print("⚠️ Nenhum refresh_token encontrado. É preciso logar de novo.")
+    except Exception as e:
+        print(f"⚠️ Erro ao renovar token: {e}")
+
+    # se não conseguir, tenta pegar do cache
+    if not token_info:
         token_info = sp_oauth.get_cached_token()
+
+    # se ainda não tiver token, avisa
+    if not token_info:
+        raise Exception("🚫 Nenhum token válido encontrado. Acesse /callback primeiro!")
 
     return spotipy.Spotify(auth=token_info["access_token"])
 

@@ -94,24 +94,31 @@ def vibe_track():
 
     track = sp.current_user_playing_track()
     if not track or not track['item']:
-        return "❌ Nenhuma faixa tocando agora."
+        return "❌ Nenhuma faixa tocando agora, bro. Solta o play e me chama de volta!"
 
     nome = track['item']['name']
     artista = track['item']['artists'][0]['name']
     track_id = track['item']['id']
 
+    # pega os dados de áudio da faixa
     features = sp.audio_features([track_id])[0]
-    bpm = features['tempo']
+    bpm = int(features['tempo'])
     energy = features['energy']
 
+    # interpreta energia e gera fala de DJ 🔊
     if energy < 0.4:
-        vibe = f"🌅 Faixa suave — {int(bpm)} BPM. Ideal pra warm-up, organic ou deep flow."
+        vibe = f"🌅 Groove leve, {bpm} BPM — clima de warm-up, vai no toque orgânico e deixa respirar."
     elif energy < 0.7:
-        vibe = f"💫 Groove médio — {int(bpm)} BPM. Perfeito pra manter o público embalado."
+        vibe = f"💫 Groove no ponto, {bpm} BPM — pista tá fluindo, segura a vibe e deixa rolar mais um loop."
     else:
-        vibe = f"🔥 Alta energia — {int(bpm)} BPM. Hora do drop, segura a pista!"
+        vibe = f"🔥 Tá pegando fogo! {bpm} BPM — drop forte, segura o grave e solta a alma no groove!"
 
-    return f"🎧 Agora tocando: {nome} — {artista}\n{vibe}"
+    # resposta estilo Monkey Dub 😎
+    return f"""
+    🎧 Bro, olha o som:
+    👉 {nome} — {artista}
+    {vibe}
+    """
 
 
 

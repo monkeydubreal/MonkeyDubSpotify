@@ -7,13 +7,14 @@ app = Flask(__name__)
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id="ae5f92b9784c43cfb9c7425a16123855",
     client_secret="350e1abc22af4c53acf9788f76a6dc17",
-    redirect_uri="https://teuapp.onrender.com/callback",
+    redirect_uri="https://monkeydubspotify.onrender.com/callback",
     scope="playlist-modify-public"
 ))
 
 @app.route('/')
 def home():
     return "🔥 Monkey Dub Spotify API rodando!"
+
 
 @app.route('/create_playlist', methods=['POST'])
 def create_playlist():
@@ -34,8 +35,6 @@ def create_playlist():
         "playlist_url": playlist["external_urls"]["spotify"]
     })
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
 
 @app.route('/callback')
 def callback():
@@ -48,7 +47,6 @@ def callback():
     )
 
     code = request.args.get('code')
-
     if code:
         try:
             token_info = sp_oauth.get_access_token(code, check_cache=False)
@@ -61,23 +59,10 @@ def callback():
     else:
         return "❌ Nenhum código recebido."
 
-    )
-    code = request.args.get('code')
-
-    if code:
-        try:
-            token_info = sp_oauth.get_access_token(code, check_cache=False)
-            return "✅ Token recebido com sucesso!"
-        except Exception as e:
-            return f"❌ Erro ao obter token: {e}"
-    else:
-        return "❌ Nenhum código recebido."
-
-
 
 @app.route('/current_track')
 def current_track():
-    sp = get_spotify_client()  # usa o token automaticamente renovado
+    sp = get_spotify_client()
 
     track = sp.current_user_playing_track()
     if track and track['item']:
@@ -118,8 +103,13 @@ def vibe_track():
     else:
         modo = "after"
 
-    recommendations = sp.recommendations(seed_tracks=[track_id], limit=3,
-        target_tempo=bpm, target_energy=energy, target_key=key_index)
+    recommendations = sp.recommendations(
+        seed_tracks=[track_id],
+        limit=3,
+        target_tempo=bpm,
+        target_energy=energy,
+        target_key=key_index
+    )
 
     if recommendations['tracks']:
         next_track = recommendations['tracks'][0]
@@ -136,24 +126,10 @@ def vibe_track():
     """
 
 
-    sp_oauth = SpotifyOAuth(
-        client_id="ae5f92b9784c43cfb9c7425a16123855",
-        client_secret="350e1abc22af4c53acf9788f76a6dc17",
-        redirect_uri="https://monkeydubspotify.onrender.com/callback",
-        scope="user-read-private user-read-email playlist-read-private playlist-modify-private user-library-read user-read-currently-playing user-read-playback-state user-modify-playback-state"
-    )
-    code = request.args.get('code')
-    if code:
-        token_info = sp_oauth.get_access_token(code)
-        return "✅ Token recebido com sucesso!"
-  else:
-    return "❌ Nenhum código recebido."
-
-
 def get_spotify_client():
     sp_oauth = SpotifyOAuth(
         client_id="ae5f92b9784c43cfb9c7425a16123855",
-        client_secret="350e1abc22af4c53acf97887f6a6dc17",
+        client_secret="350e1abc22af4c53acf9788f76a6dc17",
         redirect_uri="https://monkeydubspotify.onrender.com/callback",
         scope="user-read-currently-playing",
         cache_path=".spotifycache"
@@ -169,4 +145,5 @@ def get_spotify_client():
     return spotipy.Spotify(auth=token_info["access_token"])
 
 
-
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)

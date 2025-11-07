@@ -135,6 +135,7 @@ def vibe_track():
     {sugestao}
     """
 
+
     sp_oauth = SpotifyOAuth(
         client_id="ae5f92b9784c43cfb9c7425a16123855",
         client_secret="350e1abc22af4c53acf9788f76a6dc17",

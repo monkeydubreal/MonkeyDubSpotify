@@ -39,6 +39,26 @@ if __name__ == "__main__":
 
 @app.route('/callback')
 def callback():
+    @app.route('/current_track')
+def current_track():
+    sp_oauth = SpotifyOAuth(
+        client_id="ae5f92b9784c43cfb9c7425a16123855",
+        client_secret="350e1abc22af4c53acf9788f76a6dc17",
+        redirect_uri="https://monkeydubspotify.onrender.com/callback",
+        scope="user-read-currently-playing"
+    )
+    token_info = sp_oauth.get_cached_token()
+    if not token_info:
+        return "Token expirado ou não encontrado."
+    sp = spotipy.Spotify(auth=token_info["access_token"])
+    track = sp.current_user_playing_track()
+    if track and track['item']:
+        nome = track['item']['name']
+        artista = track['item']['artists'][0]['name']
+        return f"🎧 Agora tocando: {nome} – {artista}"
+    else:
+        return "🎵 Nenhuma faixa tocando agora."
+
     sp_oauth = SpotifyOAuth(
         client_id="ae5f92b9784c43cfb9c7425a16123855",
         client_secret="350e1abc22af4c53acf9788f76a6dc17",

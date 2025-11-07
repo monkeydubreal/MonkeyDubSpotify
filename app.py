@@ -91,19 +91,22 @@ def vibe_track():
     key_index = features['key']
     mode = features['mode']
 
+    # 🎵 Tonalidade (key + modo)
     notas = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"]
     tonalidade = notas[key_index] + ("m" if mode == 0 else "")
 
+    # 🌅 Define o "clima" da faixa
     if bpm < 115 and energy < 0.5:
-        modo = "sunset"
+        vibe = "☀️ Sunset — vibe leve e orgânica, mixa com tons suaves."
     elif 115 <= bpm <= 123 and 0.5 <= energy <= 0.75:
-        modo = "groove"
+        vibe = "💃 Groove — pista firme, fluindo suave."
     elif bpm > 123 and energy > 0.75:
-        modo = "peak"
+        vibe = "🔥 Peak time — energia alta, hora do drop pesado!"
     else:
-        modo = "after"
+        vibe = "🌙 After — introspectivo, vibe noturna e densa."
 
-    recommendations = sp.recommendations(
+    # 🎯 Sugestões compatíveis
+    recs = sp.recommendations(
         seed_tracks=[track_id],
         limit=3,
         target_tempo=bpm,
@@ -111,19 +114,25 @@ def vibe_track():
         target_key=key_index
     )
 
-    if recommendations['tracks']:
-        next_track = recommendations['tracks'][0]
-        next_name = next_track['name']
-        next_artist = next_track['artists'][0]['name']
-        sugestao = f"🎯 Próxima faixa: {next_name} — {next_artist}"
+    if recs['tracks']:
+        sugestoes = []
+        for i, rec in enumerate(recs['tracks'][:3]):
+            nome_rec = rec['name']
+            artista_rec = rec['artists'][0]['name']
+            link = rec['external_urls']['spotify']
+            sugestoes.append(f"{i+1}. [{nome_rec} — {artista_rec}]({link})")
+        sugestoes_txt = "\n".join(sugestoes)
     else:
-        sugestao = "⚡ Nenhuma sugestão perfeita agora."
+        sugestoes_txt = "⚡ Nenhuma sugestão perfeita no momento."
 
     return f"""
-    🎧 Tocando: {nome} — {artista}
-    💫 {bpm} BPM | Tom {tonalidade} | Modo {modo}
-    {sugestao}
+    🎧 Tocando agora: <b>{nome}</b> — {artista}<br>
+    💫 <b>{bpm} BPM</b> | Tom <b>{tonalidade}</b><br><br>
+    {vibe}<br><br>
+    🎯 <b>Sugestões Monkey Dub:</b><br>
+    {sugestoes_txt}
     """
+
 
 
 def get_spotify_client():
